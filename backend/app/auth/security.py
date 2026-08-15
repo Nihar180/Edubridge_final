@@ -3,6 +3,7 @@ from jose import jwt
 import os
 from datetime import datetime, timedelta, timezone
 
+
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"

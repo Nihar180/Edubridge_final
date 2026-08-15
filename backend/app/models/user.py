@@ -24,7 +24,7 @@ class User(Base):
     )
 
     password_hash = Column(String(255), nullable=False)
-
+    role = Column(String(20), nullable=False, default="student")
     grade_id = Column(
         Integer,
         ForeignKey("grades.id"),
@@ -37,9 +37,4 @@ class User(Base):
         nullable=False
     )
 
-    updated_at = Column(
-        DateTime,
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False
-    )
+    

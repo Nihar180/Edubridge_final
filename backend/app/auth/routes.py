@@ -46,11 +46,12 @@ def register(
 
     # Create user
     new_user = User(
-        name=user.name,
-        username=user.username,
-        email=user.email,
-        password_hash=hash_password(user.password),
-        grade_id=user.grade_id
+    name=user.name,
+    username=user.username,
+    email=user.email,
+    password_hash=hash_password(user.password),
+    grade_id=user.grade_id,
+    role="student"
     )
 
     db.add(new_user)

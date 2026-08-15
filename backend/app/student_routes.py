@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.models.user import User
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import require_student
 
 
 router = APIRouter(
@@ -12,7 +12,7 @@ router = APIRouter(
 
 @router.get("/me")
 def get_my_profile(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_student)
 ):
     return {
         "id": current_user.id,
