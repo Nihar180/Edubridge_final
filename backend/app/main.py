@@ -12,6 +12,8 @@ from app.models.unit import Unit
 from app.unit_routes import router as unit_router
 from app.models.module import Module
 from app.module_routes import router as module_router
+from app.models.learning_content import LearningContent
+from app.learning_content_routes import router as learning_content_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="EduBridge AI Tutor")
@@ -22,6 +24,7 @@ app.include_router(student_router)
 app.include_router(subject_router)
 app.include_router(unit_router)
 app.include_router(module_router)
+app.include_router(learning_content_router)
 
 @app.get("/")
 def root():
