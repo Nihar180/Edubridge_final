@@ -1,0 +1,61 @@
+.learning-container {
+  min-height: 100vh;
+  background-color: #f4f7fb;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.learning-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 45px;
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.learning-breadcrumb {
+  margin: 0 0 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.learning-content h1 {
+  margin: 0 0 35px;
+  font-size: 36px;
+  color: #222;
+}
+
+.learning-section {
+  margin-bottom: 35px;
+}
+
+.learning-section h2 {
+  margin-bottom: 15px;
+  font-size: 24px;
+  color: #4f46e5;
+}
+
+.learning-section p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #444;
+}
+
+.example-box {
+  padding: 15px 18px;
+  margin-bottom: 12px;
+  background-color: #f4f7fb;
+  border-radius: 8px;
+  color: #444;
+}
+
+.learning-section ul {
+  padding-left: 25px;
+}
+
+.learning-section li {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #444;
+}
