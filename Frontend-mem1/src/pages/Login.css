@@ -1,0 +1,142 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f7fb;
+}
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 35px;
+  background-color: white;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.login-box h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  color: #333;
+}
+
+.login-box h2 {
+  margin: 0 0 28px 0;
+  font-size: 22px;
+  color: #4f46e5;
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 13px 15px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-box input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.login-box button[type="submit"],
+.login-box > button {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background-color: #4f46e5;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 6px;
+  transition: background-color 0.2s;
+}
+
+.login-box button[type="submit"]:hover,
+.login-box > button:hover {
+  background-color: #4338ca;
+}
+
+.login-box p {
+  margin-top: 22px;
+  font-size: 14px;
+  color: #555;
+}
+
+.login-box a {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.login-box a:hover {
+  text-decoration: underline;
+}
+
+/* Grade Signup Section - 3 Equal Columns for Grade 8, Grade 9, Grade 10 */
+.grade-signup-section {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.grade-signup-label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.grade-signup-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.login-box .grade-signup-btn {
+  width: 100%;
+  padding: 11px 6px;
+  margin-top: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.login-box .grade-signup-btn:hover {
+  border-color: #4f46e5;
+  background-color: #f4f7fb;
+  color: #4f46e5;
+}
+
+.login-box .grade-signup-btn.selected {
+  background-color: #4f46e5;
+  color: white;
+  border-color: #4f46e5;
+}
