@@ -25,6 +25,8 @@ from app.models.flashcard import Flashcard
 from app.models.student_flashcard import StudentFlashcard
 from app.models.ai_conversation import AIConversation
 from app.models.ai_message import AIMessage
+from app.quiz_routes import router as quiz_router
+from app.assessment_routes import router as assessment_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="EduBridge AI Tutor")
@@ -35,6 +37,8 @@ app.include_router(student_router)
 app.include_router(subject_router)
 app.include_router(unit_router)
 app.include_router(module_router)
+app.include_router(quiz_router)
+app.include_router(assessment_router)
 
 @app.get("/")
 def root():
