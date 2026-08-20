@@ -7,12 +7,8 @@ function QuizResult() {
   const location = useLocation();
 
   const score = location.state?.score || 0;
-  const total = location.state?.total || 0;
-
-  const percentage =
-    total > 0
-      ? Math.round((score / total) * 100)
-      : 0;
+  const total = location.state?.total_marks || 0;
+  const percentage = Math.round(location.state?.percentage || 0);
 
   return (
     <div className="result-container">
@@ -30,8 +26,7 @@ function QuizResult() {
         </p>
 
         <p>
-          You answered {score} out of {total} questions
-          correctly.
+          You scored {score} out of {total} marks.
         </p>
 
         <div className="result-actions">

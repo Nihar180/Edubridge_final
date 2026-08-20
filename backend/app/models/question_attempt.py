@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -35,3 +36,5 @@ class QuestionAttempt(Base):
         Integer,
         nullable=True
     )
+
+    attempt = relationship("QuizAttempt", back_populates="question_attempts")

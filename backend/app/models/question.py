@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Text
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -33,3 +34,5 @@ class Question(Base):
         Text,
         nullable=True
     )
+
+    quiz = relationship("Quiz", back_populates="questions")

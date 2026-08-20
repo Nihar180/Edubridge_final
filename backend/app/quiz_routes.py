@@ -8,8 +8,11 @@ from app.database import get_db
 from app.models.user import User
 from app.models.module import Module
 from app.models.learning_content import LearningContent, UserLearningContentProgress
-from app.models.quiz import Quiz, Question, QuestionOption
-from app.models.quiz_attempt import QuizAttempt, QuestionAttempt
+from app.models.quiz import Quiz
+from app.models.question import Question
+from app.models.question_option import QuestionOption
+from app.models.quiz_attempt import QuizAttempt
+from app.models.question_attempt import QuestionAttempt
 from app.models.performance_analysis import PerformanceAnalysis
 from app.auth.dependencies import get_current_user, require_admin, require_student
 from app.quiz_schemas import (

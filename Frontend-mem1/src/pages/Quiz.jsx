@@ -1,70 +1,79 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
-import { quizQuestions } from "../data/quizQuestions";
+import { useEffect, useState } from "react";
+import { api } from "../api/client";
 import "./Quiz.css";
 
 function Quiz() {
   const { grade, subject, topic } = useParams();
   const navigate = useNavigate();
 
-  const questions =
-    quizQuestions[`${subject}-${topic}`] || [];
-
+  const [quiz, setQuiz] = useState(null);
+  const [attemptId, setAttemptId] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  useEffect(() => {
+    api.get(`/quizzes/module/${topic}`)
+      .then(async (quizzes) => {
+        if (!quizzes.length) {
+          setQuiz({ questions: [] });
+          return;
+        }
+        const started = await api.post(`/quizzes/${quizzes[0].id}/start`);
+        setAttemptId(started.attempt_id);
+        setQuiz({ ...quizzes[0], questions: started.questions });
+      })
+      .catch((requestError) => setError(requestError.message));
+  }, [topic]);
 
-  const [score, setScore] = useState(0);
-
-  if (questions.length === 0) {
+  if (error || (quiz && quiz.questions.length === 0)) {
     return (
       <div className="quiz-container">
         <div className="quiz-content">
-          <h1>Quiz Not Available</h1>
-
-          <p>
-            Questions for this topic are not available yet.
-          </p>
+          <h1>{error ? "Unable to load quiz" : "Quiz Not Available"}</h1>
+          <p>{error || "Questions for this module are not available yet."}</p>
         </div>
       </div>
     );
   }
 
-  const question = questions[currentQuestion];
+  if (!quiz) return <div className="quiz-container"><div className="quiz-content"><p>Loading quiz...</p></div></div>;
 
-  const handleNext = () => {
-    if (selectedAnswer === null) {
+  const question = quiz.questions[currentQuestion];
+
+  const handleNext = async () => {
+    if (answers[question.id] === undefined) {
       alert("Please select an answer.");
       return;
     }
 
-    let updatedScore = score;
-
-    if (selectedAnswer === question.answer) {
-      updatedScore += 1;
-      setScore(updatedScore);
-    }
-
-    if (currentQuestion === questions.length - 1) {
-      navigate(
-        `/quiz/${grade}/${subject}/${topic}/result`,
-        {
-          state: {
-            score: updatedScore,
-            total: questions.length,
-          },
-        }
-      );
+    if (currentQuestion === quiz.questions.length - 1) {
+      setIsSubmitting(true);
+      try {
+        const result = await api.post(`/quizzes/${quiz.id}/submit`, {
+          attempt_id: attemptId,
+          answers: quiz.questions.map((item) => ({
+            question_id: item.id,
+            selected_option_id: answers[item.id] ?? null,
+          })),
+        });
+        navigate(`/quiz/${grade}/${subject}/${topic}/result`, { state: result });
+      } catch (requestError) {
+        setError(requestError.message);
+      } finally {
+        setIsSubmitting(false);
+      }
 
       return;
     }
 
     setCurrentQuestion(currentQuestion + 1);
-    setSelectedAnswer(null);
   };
 
   const progress =
-    ((currentQuestion + 1) / questions.length) * 100;
+    ((currentQuestion + 1) / quiz.questions.length) * 100;
 
   return (
     <div className="quiz-container">
@@ -73,12 +82,7 @@ function Quiz() {
         <div className="quiz-header">
 
           <p>
-            Question {currentQuestion + 1} of{" "}
-            {questions.length}
-          </p>
-
-          <p>
-            Score: {score}
+            Question {currentQuestion + 1} of {quiz.questions.length}
           </p>
 
         </div>
@@ -94,19 +98,15 @@ function Quiz() {
 
         <div className="quiz-options">
 
-          {question.options.map((option, index) => (
+          {question.options.map((option) => (
             <button
-              key={index}
-              className={
-                selectedAnswer === index
-                  ? "selected"
-                  : ""
-              }
+              key={option.id}
+              className={answers[question.id] === option.id ? "selected" : ""}
               onClick={() =>
-                setSelectedAnswer(index)
+                setAnswers((previous) => ({ ...previous, [question.id]: option.id }))
               }
             >
-              {option}
+              {option.option_text}
             </button>
           ))}
 
@@ -114,9 +114,12 @@ function Quiz() {
 
         <button
           className="quiz-next-button"
+          disabled={isSubmitting}
           onClick={handleNext}
         >
-          {currentQuestion === questions.length - 1
+          {isSubmitting
+            ? "Submitting..."
+            : currentQuestion === quiz.questions.length - 1
             ? "Submit Quiz"
             : "Next"}
         </button>

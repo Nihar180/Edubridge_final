@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { api } from "../api/client";
 import "./Home.css";
 
 function Home({ view }) {
@@ -14,63 +15,57 @@ function Home({ view }) {
       ? "performance"
       : "dashboard");
 
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("edubridge_user");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          username: "Student",
-          email: "student@edubridge.org",
-          password: "password123",
-          grade: "8",
-          profilePic: "",
-        };
-  });
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("edubridge_user") || '{"username":"Student","email":""}'));
+  const [performance, setPerformance] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [gradeName, setGradeName] = useState(user.grade || user.grade_id || "");
 
   const [usernameInput, setUsernameInput] = useState(user.username);
-  const [passwordInput, setPasswordInput] = useState(user.password);
+  const [passwordInput, setPasswordInput] = useState("");
   const [usernameMsg, setUsernameMsg] = useState("");
   const [passwordMsg, setPasswordMsg] = useState("");
   const [picMsg, setPicMsg] = useState("");
 
   useEffect(() => {
-    setUsernameInput(user.username);
-    setPasswordInput(user.password);
-  }, [user]);
+    Promise.all([api.get("/profiles/me"), api.get("/performance/summary"), api.get("/progress/me"), api.get("/grades/")])
+      .then(([profile, performanceSummary, progressSummary, grades]) => {
+        setUser(profile);
+        setPerformance(performanceSummary);
+        setProgress(progressSummary);
+        setGradeName(grades.find((grade) => grade.id === profile.grade_id)?.name || profile.grade_id || "");
+        localStorage.setItem("edubridge_user", JSON.stringify(profile));
+      })
+      .catch(() => {});
+  }, []);
 
   const handleUpdateUsername = (e) => {
     e.preventDefault();
     if (!usernameInput.trim()) return;
-    const updated = { ...user, username: usernameInput.trim() };
-    setUser(updated);
-    localStorage.setItem("edubridge_user", JSON.stringify(updated));
-    setUsernameMsg("Username updated successfully!");
+    setUsernameMsg("Username changes are managed by authentication.");
     setTimeout(() => setUsernameMsg(""), 3000);
   };
 
   const handleUpdatePassword = (e) => {
     e.preventDefault();
     if (!passwordInput) return;
-    const updated = { ...user, password: passwordInput };
-    setUser(updated);
-    localStorage.setItem("edubridge_user", JSON.stringify(updated));
-    setPasswordMsg("Password updated successfully!");
+    setPasswordMsg("Password changes are managed by authentication.");
     setTimeout(() => setPasswordMsg(""), 3000);
   };
 
   const handlePicUpload = (e) => {
     const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const updated = { ...user, profilePic: reader.result };
-        setUser(updated);
-        localStorage.setItem("edubridge_user", JSON.stringify(updated));
-        setPicMsg("Profile picture updated!");
-        setTimeout(() => setPicMsg(""), 3000);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      api.put("/profiles/me", { profile_image_url: reader.result })
+        .then((updated) => {
+          setUser(updated);
+          localStorage.setItem("edubridge_user", JSON.stringify(updated));
+          setPicMsg("Profile picture updated!");
+        })
+        .catch((requestError) => setPicMsg(requestError.message));
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -118,7 +113,7 @@ function Home({ view }) {
               <div>
                 <h1>Welcome back, {user.username}!</h1>
                 <p className="dashboard-subtitle">
-                  Current Grade: <strong>Grade {user.grade}</strong>
+                  Current Grade: <strong>Grade {gradeName}</strong>
                 </p>
               </div>
             </header>
@@ -127,18 +122,18 @@ function Home({ view }) {
             <div className="dashboard-cards-grid">
               <div className="dashboard-card">
                 <h3>Overall Progress</h3>
-                <div className="stat-large">68%</div>
+                <div className="stat-large">{Math.round(progress?.average_completion || 0)}%</div>
                 <div className="progress-bar-container">
-                  <div className="progress-bar-fill" style={{ width: "68%" }}></div>
+                  <div className="progress-bar-fill" style={{ width: `${progress?.average_completion || 0}%` }}></div>
                 </div>
-                <p className="stat-desc">14 of 20 Lessons Completed</p>
+                <p className="stat-desc">{progress?.total_modules_tracked || 0} modules tracked</p>
               </div>
 
               <div className="dashboard-card">
                 <h3>Quiz Performance</h3>
-                <div className="stat-large">85%</div>
+                <div className="stat-large">{Math.round(performance?.accuracy || 0)}%</div>
                 <p className="stat-highlight">Average Score</p>
-                <p className="stat-desc">5 Quizzes Attempted</p>
+                <p className="stat-desc">{performance?.total_attempts || 0} attempts</p>
               </div>
 
               <div className="dashboard-card">
@@ -146,11 +141,11 @@ function Home({ view }) {
                 <div className="stat-list">
                   <div className="stat-item">
                     <span>Weekly Hours</span>
-                    <strong>4.5 hrs</strong>
+                    <strong>{progress?.average_mastery || 0}%</strong>
                   </div>
                   <div className="stat-item">
                     <span>Topics Mastered</span>
-                    <strong>8 Topics</strong>
+                    <strong>{progress?.total_modules_tracked || 0} Modules</strong>
                   </div>
                 </div>
               </div>
@@ -162,7 +157,7 @@ function Home({ view }) {
               <div className="dashboard-options-grid">
                 <div
                   className="dashboard-action-card"
-                  onClick={() => navigate(`/learn/${user.grade}`)}
+                  onClick={() => navigate(`/learn/${user.grade_id || user.grade}`)}
                 >
                   <div className="action-card-header">
                     <span className="action-icon">📖</span>
@@ -173,7 +168,7 @@ function Home({ view }) {
                     className="start-button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/learn/${user.grade}`);
+                      navigate(`/learn/${user.grade_id || user.grade}`);
                     }}
                   >
                     Start Learning
@@ -182,7 +177,7 @@ function Home({ view }) {
 
                 <div
                   className="dashboard-action-card"
-                  onClick={() => navigate(`/quiz/${user.grade}`)}
+                  onClick={() => navigate(`/quiz/${user.grade_id || user.grade}`)}
                 >
                   <div className="action-card-header">
                     <span className="action-icon">📝</span>
@@ -231,7 +226,7 @@ function Home({ view }) {
               <div>
                 <h1>Performance Analysis</h1>
                 <p className="dashboard-subtitle">
-                  Student Performance Overview • <strong>Grade {user.grade}</strong>
+                  Student Performance Overview • <strong>Grade {gradeName}</strong>
                 </p>
               </div>
             </header>
@@ -239,99 +234,55 @@ function Home({ view }) {
             <div className="performance-summary-grid">
               <div className="dashboard-card">
                 <h3>Overall Progress</h3>
-                <div className="stat-large">72%</div>
-                <p className="stat-desc">Completed across Grade {user.grade}</p>
+                <div className="stat-large">{Math.round(progress?.average_completion || 0)}%</div>
+                <p className="stat-desc">Completed across Grade {gradeName}</p>
               </div>
 
               <div className="dashboard-card">
                 <h3>Lessons Completed</h3>
-                <div className="stat-large">15</div>
-                <p className="stat-desc">Out of 21 total topics</p>
+                <div className="stat-large">{progress?.total_modules_tracked || 0}</div>
+                <p className="stat-desc">Modules tracked</p>
               </div>
 
               <div className="dashboard-card">
                 <h3>Quiz Performance</h3>
-                <div className="stat-large">84%</div>
-                <p className="stat-desc">Average Score across 8 quizzes</p>
+                <div className="stat-large">{Math.round(performance?.accuracy || 0)}%</div>
+                <p className="stat-desc">Average score across quizzes</p>
               </div>
 
               <div className="dashboard-card">
                 <h3>Assignment Score</h3>
-                <div className="stat-large">86%</div>
-                <p className="stat-desc">2 Assignments Completed</p>
+                <div className="stat-large">{Math.round(progress?.average_mastery || 0)}%</div>
+                <p className="stat-desc">Average module mastery</p>
               </div>
             </div>
 
             <div className="dashboard-section performance-section">
               <h2>Subject Learning Progress</h2>
               <div className="subject-perf-list">
-                <div className="subject-perf-item">
-                  <div className="subject-perf-info">
-                    <span className="subject-perf-name">Mathematics</span>
-                    <span className="subject-perf-stats">6 / 8 Topics • Avg Score: <strong>88%</strong></span>
+                {(performance?.module_performances || []).map((record) => (
+                  <div className="subject-perf-item" key={record.id}>
+                    <div className="subject-perf-info">
+                      <span className="subject-perf-name">Module {record.module_id || "Overall"}</span>
+                      <span className="subject-perf-stats">{record.correct_answers} / {record.total_questions} correct</span>
+                    </div>
+                    <div className="progress-bar-container">
+                      <div className="progress-bar-fill" style={{ width: `${record.accuracy || 0}%` }}></div>
+                    </div>
                   </div>
-                  <div className="progress-bar-container">
-                    <div className="progress-bar-fill" style={{ width: "80%" }}></div>
-                  </div>
-                </div>
-
-                <div className="subject-perf-item">
-                  <div className="subject-perf-info">
-                    <span className="subject-perf-name">Science</span>
-                    <span className="subject-perf-stats">5 / 7 Topics • Avg Score: <strong>82%</strong></span>
-                  </div>
-                  <div className="progress-bar-container">
-                    <div className="progress-bar-fill" style={{ width: "70%" }}></div>
-                  </div>
-                </div>
-
-                <div className="subject-perf-item">
-                  <div className="subject-perf-info">
-                    <span className="subject-perf-name">English</span>
-                    <span className="subject-perf-stats">4 / 6 Topics • Avg Score: <strong>78%</strong></span>
-                  </div>
-                  <div className="progress-bar-container">
-                    <div className="progress-bar-fill" style={{ width: "65%" }}></div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
             <div className="dashboard-section performance-section">
               <h2>Recent Quiz & Assignment Results</h2>
               <div className="quiz-history-list">
-                <div className="quiz-history-row">
-                  <div>
-                    <h4 className="quiz-title">Algebra: Linear Equations (Quiz)</h4>
-                    <span className="quiz-date">Yesterday</span>
+                {(progress?.progress_records || []).map((record) => (
+                  <div className="quiz-history-row" key={record.id}>
+                    <div><h4 className="quiz-title">Module {record.module_id} progress</h4></div>
+                    <div className="quiz-score-box"><span className="quiz-score">{record.mastery_score}%</span></div>
                   </div>
-                  <div className="quiz-score-box">
-                    <span className="quiz-score">90%</span>
-                    <span className="quiz-status-badge">Passed</span>
-                  </div>
-                </div>
-
-                <div className="quiz-history-row">
-                  <div>
-                    <h4 className="quiz-title">Grade {user.grade} Science Assessment (Assignment)</h4>
-                    <span className="quiz-date">2 days ago</span>
-                  </div>
-                  <div className="quiz-score-box">
-                    <span className="quiz-score">86%</span>
-                    <span className="quiz-status-badge">Completed</span>
-                  </div>
-                </div>
-
-                <div className="quiz-history-row">
-                  <div>
-                    <h4 className="quiz-title">Physics: Force & Motion (Quiz)</h4>
-                    <span className="quiz-date">3 days ago</span>
-                  </div>
-                  <div className="quiz-score-box">
-                    <span className="quiz-score">85%</span>
-                    <span className="quiz-status-badge">Passed</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </>
@@ -351,8 +302,8 @@ function Home({ view }) {
               {/* Profile Picture Upload & Display */}
               <div className="profile-picture-section">
                 <div className="avatar-preview">
-                  {user.profilePic ? (
-                    <img src={user.profilePic} alt="Profile Avatar" className="avatar-img" />
+                  {user.profile_image_url ? (
+                    <img src={user.profile_image_url} alt="Profile Avatar" className="avatar-img" />
                   ) : (
                     <div className="avatar-placeholder">
                       {user.username ? user.username.charAt(0).toUpperCase() : "S"}
@@ -440,7 +391,7 @@ function Home({ view }) {
                   <input
                     type="text"
                     className="profile-input disabled"
-                    value={`Grade ${user.grade}`}
+                    value={`Grade ${gradeName}`}
                     disabled
                   />
                 </div>

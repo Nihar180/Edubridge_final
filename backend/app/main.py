@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
@@ -12,9 +13,13 @@ from app.models.subject import Subject
 from app.models.unit import Unit
 from app.models.module import Module
 from app.models.learning_content import LearningContent, UserLearningContentProgress
-from app.models.quiz import Quiz, Question, QuestionOption
-from app.models.quiz_attempt import QuizAttempt, QuestionAttempt
-from app.models.unit_assessment import UnitAssessment, AssessmentAttempt
+from app.models.quiz import Quiz
+from app.models.question import Question
+from app.models.question_option import QuestionOption
+from app.models.quiz_attempt import QuizAttempt
+from app.models.question_attempt import QuestionAttempt
+from app.models.unit_assessment import UnitAssessment
+from app.models.assessment_attempt import AssessmentAttempt
 from app.models.student_progress import StudentProgress
 from app.models.performance_analysis import PerformanceAnalysis
 from app.models.user_profile import UserProfile
@@ -69,6 +74,17 @@ from app.assessment_routes import router as assessment_router
 
 
 app = FastAPI(title="EduBridge AI Tutor")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount uploads static directory for PDF and media access
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")

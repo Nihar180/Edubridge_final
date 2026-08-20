@@ -35,27 +35,3 @@ class QuizAttempt(Base):
         cascade="all, delete-orphan"
     )
 
-
-class QuestionAttempt(Base):
-    __tablename__ = "question_attempts"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    attempt_id = Column(
-        Integer,
-        ForeignKey("quiz_attempts.id"),
-        nullable=False
-    )
-    question_id = Column(
-        Integer,
-        ForeignKey("questions.id"),
-        nullable=False
-    )
-    selected_option_id = Column(
-        Integer,
-        ForeignKey("question_options.id"),
-        nullable=True
-    )
-    is_correct = Column(Boolean, nullable=False, default=False)
-    marks_awarded = Column(Float, nullable=False, default=0.0)
-
-    attempt = relationship("QuizAttempt", back_populates="question_attempts")

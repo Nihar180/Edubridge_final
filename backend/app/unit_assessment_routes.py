@@ -6,7 +6,8 @@ from app.database import get_db
 from app.models.user import User
 from app.models.unit import Unit
 from app.models.subject import Subject
-from app.models.unit_assessment import UnitAssessment, AssessmentAttempt
+from app.models.unit_assessment import UnitAssessment
+from app.models.assessment_attempt import AssessmentAttempt
 from app.auth.dependencies import get_current_user
 from app.unit_assessment_schemas import UnitAssessmentGroupedResponse, UnitAssessmentQuestionItem
 from app.services.ai_assessment_service import generate_unit_assessment_questions

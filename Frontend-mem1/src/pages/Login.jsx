@@ -1,30 +1,38 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { api, TOKEN_KEY } from "../api/client";
 import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const existing = localStorage.getItem("edubridge_user");
-    let userData = existing ? JSON.parse(existing) : null;
-    if (!userData) {
-      userData = {
-        username: username.trim() || "Student",
-        email: "student@edubridge.org",
-        password: password || "123456",
-        grade: "8",
-        profilePic: "",
-      };
-      localStorage.setItem("edubridge_user", JSON.stringify(userData));
-    } else if (username.trim()) {
-      userData.username = username.trim();
-      localStorage.setItem("edubridge_user", JSON.stringify(userData));
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const tokenResponse = await api.post("/auth/login", {
+        username: username.trim(),
+        password,
+      });
+      localStorage.setItem(TOKEN_KEY, tokenResponse.access_token);
+      const profile = await api.get("/profiles/me");
+      localStorage.setItem("edubridge_user", JSON.stringify(profile));
+      navigate("/home");
+    } catch (requestError) {
+      setError(
+        requestError.status
+          ? `${requestError.message} (${requestError.status})`
+          : requestError.message || "Unable to log in."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-    navigate("/home");
   };
 
   return (
@@ -49,7 +57,10 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button type="submit">Login</button>
+          {error && <p className="profile-status-msg">{error}</p>}
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Login"}
+          </button>
         </form>
 
         <p>

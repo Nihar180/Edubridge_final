@@ -5,7 +5,8 @@ from sqlalchemy import func
 from app.models.student_progress import StudentProgress
 from app.models.performance_analysis import PerformanceAnalysis
 from app.models.quiz import Quiz
-from app.models.quiz_attempt import QuizAttempt, QuestionAttempt
+from app.models.quiz_attempt import QuizAttempt
+from app.models.question_attempt import QuestionAttempt
 from app.models.learning_content import LearningContent, UserLearningContentProgress
 
 
@@ -39,14 +40,24 @@ def recalculate_student_module_progress(
 
     content_percentage = (completed_contents / total_contents * 100.0) if total_contents > 0 else 100.0
 
-    # 3. Check if user has passed the module quiz at least once
-    has_passed_quiz = db.query(QuizAttempt).join(
-        Quiz, QuizAttempt.quiz_id == Quiz.id
-    ).filter(
-        Quiz.module_id == module_id,
-        QuizAttempt.user_id == user_id,
-        QuizAttempt.passed == True
-    ).first() is not None
+    # 3. Check quiz state only when this module actually has quizzes.
+    quiz_ids = [quiz_id for (quiz_id,) in db.query(Quiz.id).filter(
+        Quiz.module_id == module_id
+    ).all()]
+    has_passed_quiz = False
+    best_quiz_score = 0.0
+
+    if quiz_ids:
+        has_passed_quiz = db.query(QuizAttempt).filter(
+            QuizAttempt.quiz_id.in_(quiz_ids),
+            QuizAttempt.user_id == user_id,
+            QuizAttempt.passed == True
+        ).first() is not None
+
+        best_quiz_score = db.query(func.max(QuizAttempt.percentage)).filter(
+            QuizAttempt.quiz_id.in_(quiz_ids),
+            QuizAttempt.user_id == user_id
+        ).scalar() or 0.0
 
     if quiz_passed:
         has_passed_quiz = True
@@ -65,14 +76,6 @@ def recalculate_student_module_progress(
         final_completion_pct = 100.0
     else:
         final_completion_pct = round(content_percentage, 2)
-
-    # Calculate best mastery score
-    best_quiz_score = db.query(func.max(QuizAttempt.percentage)).join(
-        Quiz, QuizAttempt.quiz_id == Quiz.id
-    ).filter(
-        Quiz.module_id == module_id,
-        QuizAttempt.user_id == user_id
-    ).scalar() or 0.0
 
     if latest_quiz_percentage is not None:
         best_quiz_score = max(float(best_quiz_score), float(latest_quiz_percentage))

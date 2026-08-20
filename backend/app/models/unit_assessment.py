@@ -22,24 +22,3 @@ class UnitAssessment(Base):
         server_default=func.now(),
         nullable=False
     )
-
-
-class AssessmentAttempt(Base):
-    __tablename__ = "assessment_attempts"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    unit_id = Column(
-        Integer,
-        ForeignKey("units.id"),
-        nullable=False
-    )
-    user_id = Column(
-        Integer,
-        ForeignKey("users.id"),
-        nullable=False
-    )
-    accessed_at = Column(
-        DateTime,
-        server_default=func.now(),
-        nullable=False
-    )

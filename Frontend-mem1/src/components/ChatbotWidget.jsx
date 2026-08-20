@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { api } from "../api/client";
 import "./ChatbotWidget.css";
 
 function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const { grade, subject } = useParams();
 
   const [messages, setMessages] = useState([
     {
@@ -13,7 +17,7 @@ function ChatbotWidget() {
     },
   ]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!message.trim()) {
       return;
     }
@@ -23,18 +27,17 @@ function ChatbotWidget() {
       text: message,
     };
 
-    const botMessage = {
-      sender: "bot",
-      text: "I'm currently a demo chatbot. A real AI response will be connected later.",
-    };
-
-    setMessages((previousMessages) => [
-      ...previousMessages,
-      userMessage,
-      botMessage,
-    ]);
-
+    setMessages((previousMessages) => [...previousMessages, userMessage]);
     setMessage("");
+    setIsSending(true);
+    try {
+      const response = await api.ask(userMessage.text, { className: grade, subject });
+      setMessages((previousMessages) => [...previousMessages, { sender: "bot", text: response.answer }]);
+    } catch (error) {
+      setMessages((previousMessages) => [...previousMessages, { sender: "bot", text: error.message }]);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -93,6 +96,7 @@ function ChatbotWidget() {
               type="text"
               placeholder="Ask a question..."
               value={message}
+              disabled={isSending}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
