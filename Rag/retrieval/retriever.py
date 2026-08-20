@@ -1,15 +1,19 @@
 import chromadb
+from pathlib import Path
 from embedding.embedder import Embedder
+
+
+RAG_ROOT = Path(__file__).resolve().parents[1]
 
 
 class Retriever:
 
     def __init__(self, top_k=5):
         self.client = chromadb.PersistentClient(
-            path="data/chroma_db"
+            path=str(RAG_ROOT / "data" / "chroma_db")
         )
 
-        self.collection = self.client.get_collection(
+        self.collection = self.client.get_or_create_collection(
             name="edubridge_documents"
         )
 
@@ -42,13 +46,16 @@ class Retriever:
                 "$and": conditions
             }
 
+        query_options = {
+            "query_embeddings": [query_embedding],
+            "n_results": self.top_k,
+        }
         if where:
-            results = self.collection.query(
-                query_embeddings=[query_embedding],
-                n_results=self.top_k,
-                where=where
-            )
-        else:
+            query_options["where"] = where
+
+        results = self.collection.query(**query_options)
+
+        if where and not results.get("documents", [[]])[0]:
             results = self.collection.query(
                 query_embeddings=[query_embedding],
                 n_results=self.top_k

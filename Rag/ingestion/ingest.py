@@ -5,7 +5,8 @@ import subprocess
 from .loader import load_document
 from .chunker import chunk_text
 
-DOCUMENTS_DIR = Path("data/documents")
+RAG_ROOT = Path(__file__).resolve().parents[1]
+DOCUMENTS_DIR = RAG_ROOT / "data" / "documents"
 FRONTEND_CONTENT_BRIDGE = Path(__file__).with_name("frontend_content_bridge.mjs")
 
 FRONTEND_CONTENT_METADATA = {

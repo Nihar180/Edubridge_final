@@ -1,7 +1,13 @@
 from passlib.context import CryptContext
 from jose import jwt
 import os
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[3] / ".env")
+load_dotenv()
 
 
 pwd_context = CryptContext(
@@ -11,6 +17,11 @@ pwd_context = CryptContext(
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is required. Add it to the project .env file or the environment."
+    )
 
 
 def hash_password(password: str):

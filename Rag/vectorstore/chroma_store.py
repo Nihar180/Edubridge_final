@@ -1,12 +1,16 @@
 import chromadb
+from pathlib import Path
 from ingestion.ingest import ingest_documents
 from embedding.embedder import Embedder
+
+
+RAG_ROOT = Path(__file__).resolve().parents[1]
 
 
 class ChromaStore:
     def __init__(self):
         self.client = chromadb.PersistentClient(
-            path="data/chroma_db"
+            path=str(RAG_ROOT / "data" / "chroma_db")
         )
 
         self.collection = self.client.get_or_create_collection(
@@ -37,7 +41,7 @@ class ChromaStore:
                 for chunk in batch
             ]
 
-            self.collection.add(
+            self.collection.upsert(
                 ids=ids,
                 documents=texts,
                 embeddings=embeddings,

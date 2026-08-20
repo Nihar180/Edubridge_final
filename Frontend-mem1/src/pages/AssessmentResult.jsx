@@ -13,17 +13,14 @@ function AssessmentResult() {
       ? Math.round((score / total) * 100)
       : 0;
 
-  let performance = "";
-
-  if (percentage >= 80) {
-    performance = "Excellent";
-  } else if (percentage >= 60) {
-    performance = "Good";
-  } else if (percentage >= 40) {
-    performance = "Needs Improvement";
-  } else {
-    performance = "Needs More Practice";
-  }
+  const performance =
+    percentage >= 80
+      ? "Excellent"
+      : percentage >= 60
+      ? "Good"
+      : percentage >= 40
+      ? "Needs Improvement"
+      : "Needs More Practice";
 
   return (
     <div className="assessment-result-container">

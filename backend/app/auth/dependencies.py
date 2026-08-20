@@ -3,10 +3,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from app.database import get_db
 from app.models.user import User
 
+load_dotenv(Path(__file__).resolve().parents[3] / ".env")
+load_dotenv()
 
 security = HTTPBearer()
 
