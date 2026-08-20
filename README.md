@@ -8,7 +8,7 @@
 
 ### ▶️ Watch the Complete Project Demo
 
-🎬 [Watch EduBridge AI Tutor Demo](YOUR_VIDEO_LINK_HERE)
+🎬 [[Watch EduBridge AI Tutor Demo](https://drive.google.com/file/d/15cYXLeVPE1BNbwb9LptzxGqvmdteHFxF/view?usp=sharing)
 
 The demo showcases the complete working flow of EduBridge AI Tutor, including student authentication, grade and subject selection, structured learning, AI-powered doubt solving, quizzes, assessments, progress tracking, and performance analysis.
 
